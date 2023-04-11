@@ -47,6 +47,28 @@ CREATE TABLE times (
   FOREIGN KEY (chave_id) REFERENCES chaves(id)
 );
 
+-- Insere os dados de exemplo na tabela de times, atribuindo-os a uma chave
+INSERT INTO times (nome, chave_id) VALUES 
+('Ferrados', 1),
+('Ferrinhos', 1),
+('Feromonios', 1),
+('Lendarios Ferros', 1),
+('Bronzetes', 2);
+
+-- Criação da trigger para limitar o número de membros de um time a 5
+DELIMITER //
+CREATE TRIGGER tr_limitar_membros_time
+BEFORE INSERT ON usuarios FOR EACH ROW
+BEGIN
+  DECLARE num_membros INT;
+  SELECT COUNT(*) INTO num_membros FROM usuarios WHERE time_id = NEW.time_id;
+  IF num_membros = 5 THEN
+    SIGNAL SQLSTATE '45000' 
+      SET MESSAGE_TEXT = 'O time já possui o número máximo de membros.';
+  END IF;
+END;
+//
+DELIMITER ;
 
 -- Criação da tabela de usuários em uma chave (relacionamento many-to-many)
 CREATE TABLE times_chave (
@@ -65,4 +87,8 @@ INSERT INTO times_chave (time_id, chave_id) VALUES
 
 select * from times_chave where chave_id = 1;
 
+SELECT t.*
+FROM times t
+JOIN chaves c ON t.chave_id = c.id
+WHERE c.nome = 'Ferros';
 
